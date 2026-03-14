@@ -72,31 +72,31 @@ df = df.dropna(subset=numeric_cols)
 st.sidebar.success(f"✅ Arquivo carregado: {len(df)} itens")
 
 # ============================================================================
-# SELEÇÃO DE CATEGORIAS
+# SELEÇÃO DE NÍVEIS MERCADOLÓGICOS
 # ============================================================================
 st.sidebar.markdown("---")
-st.sidebar.subheader("📂 Selecione as Categorias")
+st.sidebar.subheader("📂 Selecione os Níveis Mercadológicos")
 
-categorias_disponiveis = sorted(df['DESC_NIVEL_MERCADOLOGICO'].unique())
+niveis_disponiveis = sorted(df['DESC_NIVEL_MERCADOLOGICO'].unique())
 
-# Checkbox "Selecionar Todas"
-selecionar_todas = st.sidebar.checkbox("✅ Selecionar todas as categorias", value=True)
+# Checkbox "Selecionar Todos"
+selecionar_todos = st.sidebar.checkbox("✅ Selecionar todos os níveis", value=True)
 
-if selecionar_todas:
-    categorias_selecionadas = categorias_disponiveis
+if selecionar_todos:
+    niveis_selecionados = niveis_disponiveis
 else:
-    categorias_selecionadas = st.sidebar.multiselect(
-        "Escolha as categorias para análise:",
-        options=categorias_disponiveis,
+    niveis_selecionados = st.sidebar.multiselect(
+        "Escolha os níveis mercadológicos para análise:",
+        options=niveis_disponiveis,
         default=[]
     )
 
-if not categorias_selecionadas:
-    st.warning("⚠️ Selecione pelo menos uma categoria para continuar.")
+if not niveis_selecionados:
+    st.warning("⚠️ Selecione pelo menos um nível mercadológico para continuar.")
     st.stop()
 
-# Filtrar dados pelas categorias selecionadas
-df_filtrado = df[df['DESC_NIVEL_MERCADOLOGICO'].isin(categorias_selecionadas)].copy()
+# Filtrar dados pelos níveis mercadológicos selecionados
+df_filtrado = df[df['DESC_NIVEL_MERCADOLOGICO'].isin(niveis_selecionados)].copy()
 
 # ============================================================================
 # CONFIGURAÇÕES NA SIDEBAR
@@ -191,7 +191,7 @@ with col1:
     st.metric(
         "Total de itens",
         len(df_filtrado),
-        help="Itens nas categorias selecionadas"
+        help="Itens nos níveis mercadológicos selecionados"
     )
 
 with col2:
@@ -239,7 +239,7 @@ with tab1:
         ]].copy()
         
         df_display.columns = [
-            'Categoria',
+            'Nível Mercadológico',
             'Item',
             'Consumo Período',
             'Consumo/Dia',
@@ -265,8 +265,8 @@ with tab2:
     st.subheader("Análise Detalhada por Categoria")
     
     if len(df_compra) > 0:
-        # Resumo por categoria
-        resumo_categoria = df_compra.groupby('DESC_NIVEL_MERCADOLOGICO').agg({
+        # Resumo por nível mercadológico
+        resumo_nivel = df_compra.groupby('DESC_NIVEL_MERCADOLOGICO').agg({
             'DESCRICAO_EMBALAGEM': 'count',
             'Necessidade_Compra': 'sum',
             'Custo_Total': 'sum'
@@ -276,13 +276,13 @@ with tab2:
             'Custo_Total': 'Total Custo'
         }).sort_values('Total Custo', ascending=False)
         
-        resumo_categoria['Total Custo'] = resumo_categoria['Total Custo'].apply(lambda x: f"R$ {x:,.2f}")
-        resumo_categoria['Total Quantidade'] = resumo_categoria['Total Quantidade'].apply(lambda x: f"{x:.2f}")
+        resumo_nivel['Total Custo'] = resumo_nivel['Total Custo'].apply(lambda x: f"R$ {x:,.2f}")
+        resumo_nivel['Total Quantidade'] = resumo_nivel['Total Quantidade'].apply(lambda x: f"{x:.2f}")
         
-        st.dataframe(resumo_categoria, use_container_width=True)
+        st.dataframe(resumo_nivel, use_container_width=True)
         
-        # Gráfico de distribuição de custo por categoria
-        st.subheader("Distribuição de Custo por Categoria")
+        # Gráfico de distribuição de custo por nível mercadológico
+        st.subheader("Distribuição de Custo por Nível Mercadológico")
         
         resumo_grafico = df_compra.groupby('DESC_NIVEL_MERCADOLOGICO')['Custo_Total'].sum().sort_values(ascending=False)
         
@@ -311,7 +311,7 @@ with tab3:
             ]].copy()
             
             df_export.columns = [
-                'Categoria',
+                'Nível Mercadológico',
                 'Item',
                 'Consumo Período',
                 'Consumo/Dia',
@@ -323,7 +323,7 @@ with tab3:
             
             df_export.to_excel(writer, sheet_name='Lista de Compras', index=False)
             
-            # Aba 2: Resumo por Categoria
+            # Aba 2: Resumo por Nível Mercadológico
             resumo_export = df_compra.groupby('DESC_NIVEL_MERCADOLOGICO').agg({
                 'DESCRICAO_EMBALAGEM': 'count',
                 'Necessidade_Compra': 'sum',
@@ -334,7 +334,7 @@ with tab3:
                 'Custo_Total': 'Total Custo'
             })
             
-            resumo_export.to_excel(writer, sheet_name='Resumo por Categoria')
+            resumo_export.to_excel(writer, sheet_name='Resumo por Nível Mercadológico')
             
             # Aba 3: Configurações utilizadas
             config_export = pd.DataFrame({
@@ -343,7 +343,7 @@ with tab3:
                     'Dias de Cobertura',
                     'Período da Planilha (dias)',
                     'Margem de Segurança Global (%)',
-                    'Categorias Analisadas',
+                    'Níveis Mercadológicos Analisados',
                     'Total de Itens',
                     'Itens a Comprar',
                     'Custo Total da Compra'
@@ -353,7 +353,7 @@ with tab3:
                     dias_cobertura,
                     dias_planilha,
                     margem_seguranca_global,
-                    len(categorias_selecionadas),
+                    len(niveis_selecionados),
                     len(df_filtrado),
                     len(df_compra),
                     f"R$ {df_compra['Custo_Total'].sum():,.2f}"
@@ -382,6 +382,6 @@ with tab3:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #888; font-size: 12px;'>
-    <p>🤖 Agente de Análise de Compras v2.0 | Desenvolvido para otimizar sua gestão de estoque</p>
+    <p>🤖 Agente de Análise de Compras v2.1 | Desenvolvido para otimizar sua gestão de estoque</p>
 </div>
 """, unsafe_allow_html=True)
